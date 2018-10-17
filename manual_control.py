@@ -13,6 +13,7 @@ import numpy as np
 import gym
 import gym_duckietown
 from gym_duckietown.envs import DuckietownEnv
+from gym_duckietown.wrappers import InverseKinematicsWrapper
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--env-name', default=None)
@@ -24,13 +25,13 @@ parser.add_argument('--frame-skip', default=1, type=int, help='number of frames 
 args = parser.parse_args()
 
 if args.env_name is None:
-    env = DuckietownEnv(
+    env = InverseKinematicsWrapper(DuckietownEnv(
         map_name = args.map_name,
         draw_curve = args.draw_curve,
         draw_bbox = args.draw_bbox,
         domain_rand = args.domain_rand,
         frame_skip = args.frame_skip
-    )
+    ))
 else:
     env = gym.make(args.env_name)
 

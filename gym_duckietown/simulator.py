@@ -744,31 +744,32 @@ class Simulator(gym.Env):
 
         Vl, Vr = wheelVels
         l = self.wheel_dist
+        r = self.radius
 
         # If the wheel velocities are the same, then there is no rotation
         if Vl == Vr:
             self.cur_pos = self.cur_pos + deltaTime * Vl * self.get_dir_vec()
             return
 
-        # Compute the angular rotation velocity about the ICC (center of curvature)
-        w = (Vr - Vl) / l
+        # Step 1: Translation
+        px, py, pz = self.cur_pos
+        deltaX = 0.5 * r * (Vl + Vr) * np.cos(self.cur_angle) * deltaTime
+        deltaZ = 0.5 * r * (Vl + Vr) * np.sin(self.cur_angle) * deltaTime
+        
+        npx = px + deltaX
+        npz = pz + deltaZ
 
-        # Compute the distance to the center of curvature
-        r = (l * (Vl + Vr)) / (2 * (Vl - Vr))
+        # Update the position
+        self.cur_pos = np.array([npx, py, npz])
+
+        # Step 2: Rotation
+        # Compute the angular rotation velocity
+        w = (Vr - Vl) / l * r
 
         # Compute the rotation angle for this time step
         rotAngle = w * deltaTime
-
-        # Rotate the robot's position around the center of rotation
-        r_vec = self.get_right_vec()
-        px, py, pz = self.cur_pos
-        cx = px + r * r_vec[0]
-        cz = pz + r * r_vec[2]
-        npx, npz = rotate_point(px, pz, cx, cz, rotAngle)
-        self.cur_pos = np.array([npx, py, npz])
-
         # Update the robot's direction angle
-        self.cur_angle += rotAngle
+        self.cur_angle += rotAngle     
 
     def _drivable_pos(self, pos):
         """
